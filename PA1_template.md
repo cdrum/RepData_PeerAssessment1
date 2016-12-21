@@ -1,10 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
-    toc: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Introduction
 Author: Chris Drumgoole / https://github.com/cdrum/RepData_PeerAssessment1 / December 2016
@@ -26,15 +20,24 @@ This document will include the following:
 
 First thing we need ot do is create the data folder and unzip the 'activity.zip' file to the data folder.
 
-```{r extract_data}
+
+```r
 if(!file.exists("./data")){dir.create("./data")} # Create the Data folder if it doesn't already exist
 unzip("./activity.zip", exdir="./data", overwrite = TRUE) # Unzip the data into the data folder
 ```
 
 Next, let's read the csv file into a data table called **ACTIVITY.DT**.
 
-```{r read_data}
+
+```r
 library(data.table)
+```
+
+```
+## Warning: package 'data.table' was built under R version 3.3.2
+```
+
+```r
 ACTIVITY.DT <- data.table(read.csv("./data/activity.csv"))
 ```
 
@@ -45,7 +48,8 @@ ACTIVITY.DT <- data.table(read.csv("./data/activity.csv"))
 ### Total Steps per Day
 First step is to Calculate the total number of steps taken per day. We can do this by creating a key for the data.table using `setkey` function. Next, we can use the handy data.table syntax allowing us to do calculata sum of column `steps` according to the column key we just created. We store this in `steps.by.day`.
 
-```{r stepsbyday}
+
+```r
 setkey(ACTIVITY.DT, date)
 steps.by.day <- ACTIVITY.DT[, list(TotalSteps=sum(steps, na.rm = TRUE)), by=key(ACTIVITY.DT)] 
 # no.rm = TRUE to ignore NAs and include 0's where there are no values for a day
@@ -55,24 +59,46 @@ steps.by.day <- ACTIVITY.DT[, list(TotalSteps=sum(steps, na.rm = TRUE)), by=key(
 
 Using ggplot2, we can make a nice histogram plot of the frequency of steps by day.
 
-```{r stepsbydayhistogram}
+
+```r
 library(ggplot2)
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.3.2
+```
+
+```r
 qplot(steps.by.day$TotalSteps, geom="histogram", binwidth=500, xlab = "Total Steps by Day", 
       ylab= "Frequency with binwidth of 500")
 ```
+
+![](PA1_template_files/figure-html/stepsbydayhistogram-1.png)<!-- -->
 
 ### Mean and Median Steps per Day
 
 Finally, what we can do is simply apply the `TotalSteps` column of the sumarized data set `steps.by.day` to the `mean` function. And note that I'm capping the result to 2 decimal places using the `round` function.
 
-```{r meanstepsbyday}
+
+```r
 final.daily.mean <- round(mean(steps.by.day$TotalSteps, na.rm=TRUE), digits=2)
 final.daily.median <- median(steps.by.day$TotalSteps, na.rm=TRUE)
 final.daily.mean
+```
+
+```
+## [1] 9354.23
+```
+
+```r
 final.daily.median
 ```
 
-And we can find the mean total number of steps taken per day is **`r final.daily.mean`** and the median is **`r final.daily.median`**.  
+```
+## [1] 10395
+```
+
+And we can find the mean total number of steps taken per day is **9354.23** and the median is **10395**.  
 
 
 ## What is the average daily activity pattern?
@@ -83,30 +109,52 @@ In order to do this, we need to reformat our data a bit. For each time interval,
 
 First, let's make the `interval` column a key. Then we can caluclate the mean according to this key grouping.
 
-```{r}
+
+```r
 setkey(ACTIVITY.DT, interval)
 mean.steps.by.interval <- ACTIVITY.DT[, list(AverageSteps=mean(steps, na.rm = TRUE)), by=key(ACTIVITY.DT)] 
 head(mean.steps.by.interval, 10)
 ```
 
+```
+##     interval AverageSteps
+##  1:        0    1.7169811
+##  2:        5    0.3396226
+##  3:       10    0.1320755
+##  4:       15    0.1509434
+##  5:       20    0.0754717
+##  6:       25    2.0943396
+##  7:       30    0.5283019
+##  8:       35    0.8679245
+##  9:       40    0.0000000
+## 10:       45    1.4716981
+```
+
 Next, now that we have this data, we can plot it!
 
-```{r plot-mean_interval}
+
+```r
 qplot(mean.steps.by.interval$interval, mean.steps.by.interval$AverageSteps, geom = "line",
       main="Average Steps by Daily Interval", 
       xlab = "Interval (every 5 minutes)", ylab = "Average Steps")
-
 ```
+
+![](PA1_template_files/figure-html/plot-mean_interval-1.png)<!-- -->
 
 Next, to answer the question *"Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?"*, we can simply use the `which.max` function to find the row number and then apply it to the data.table to find the interval.
 
-```{r}
+
+```r
 max.interval.index <- which.max(mean.steps.by.interval$AverageSteps)
 interval.with.max <- mean.steps.by.interval[max.interval.index]$interval
 interval.with.max
 ```
 
-We can finally see that the interval with the maximum average steps is **`r interval.with.max`**. This corresponds to the highest point on the chart we just plotted.
+```
+## [1] 835
+```
+
+We can finally see that the interval with the maximum average steps is **835**. This corresponds to the highest point on the chart we just plotted.
 
 
 ## Imputing missing values
@@ -115,12 +163,17 @@ To avoid any potential for bias, we need to impute any NA value.
 
 The first step to doing this, we will first calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs). To do this, we can simply sum!
 
-```{r count_nas}
+
+```r
 total.nas <- sum(is.na(ACTIVITY.DT$steps))
 total.nas
 ```
 
-We see that there are **`r total.nas`** rows with NA values.
+```
+## [1] 2304
+```
+
+We see that there are **2304** rows with NA values.
 
 Next, in order to fill those NAs, we need to devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc. 
 
@@ -130,7 +183,8 @@ Let's create a logical vector telling us what row of the original data set has a
 
 Finally, we can create a new dataset that is equal to the original dataset but with the missing data filled in. This new dataset is called `COMPLETE.ACTIVITY.DT`.
 
-```{r}
+
+```r
 library(dtplyr)
 library(dplyr, warn.conflicts = FALSE)
 impute.steps <- function(steps, int) {
@@ -147,15 +201,21 @@ COMPLETE.ACTIVITY.DT[na.steps]$steps <- mapply(impute.steps, COMPLETE.ACTIVITY.D
 
 Sanity check, make sure there are no na values in steps:
 
-```{r}
+
+```r
 sum(is.na(COMPLETE.ACTIVITY.DT$steps))
+```
+
+```
+## [1] 0
 ```
 
 **Success!** Finally, let's make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Basically, repeating what we did before for comparison.
 
 ### Re-Analysis - Histogram frequency of steps per day and mean/median calculations
 
-```{r re-analysis}
+
+```r
 options(scipen=999)
 library(ggplot2)
 setkey(COMPLETE.ACTIVITY.DT, date)
@@ -165,19 +225,34 @@ complete.steps.by.day <- COMPLETE.ACTIVITY.DT[,
 
 qplot(complete.steps.by.day$TotalSteps, geom="histogram", binwidth=500, xlab = "Total Steps by Day", 
       ylab= "Frequency with binwidth of 500")
+```
 
+![](PA1_template_files/figure-html/re-analysis-1.png)<!-- -->
+
+```r
 complete.final.daily.mean <- round(mean(complete.steps.by.day$TotalSteps, na.rm=TRUE), digits=2)
 complete.final.daily.median <- median(complete.steps.by.day$TotalSteps, na.rm=TRUE)
 complete.final.daily.mean
+```
+
+```
+## [1] 10749.77
+```
+
+```r
 complete.final.daily.median
 ```
 
-For this new data set (complete imuted NA values), we find the mean total number of steps taken per day is **`r complete.final.daily.mean`** and the median is **`r complete.final.daily.median`**.  
+```
+## [1] 10641
+```
+
+For this new data set (complete imuted NA values), we find the mean total number of steps taken per day is **10749.77** and the median is **10641**.  
 
 We can see that these new mean/median values are different from the previous ones:
 
-- Mean: **`r final.daily.mean`** *(with NA)* compared with **`r complete.final.daily.mean`** *(imuted)* (Difference of `r complete.final.daily.mean - final.daily.mean`)
-- Median: **`r final.daily.median`** *(with NA)* compared with **`r complete.final.daily.median`** *(imuted)* (Difference of `r complete.final.daily.median - final.daily.median`)
+- Mean: **9354.23** *(with NA)* compared with **10749.77** *(imuted)* (Difference of 1395.54)
+- Median: **10395** *(with NA)* compared with **10641** *(imuted)* (Difference of 246)
 
 The impact of imputing missing data on the estimates of the total daily number of steps is quite big when looking at the mean values **(over 1,000 higher!)**.
 
@@ -194,7 +269,8 @@ First thing we want to do in our analysis is create a new factor variable in the
 
 For this, we can use the `weekdays` function, but first we need to ensure the `date` column in the data set is of `Date` type. We can make a logical vector that stores whether the row is a weekend or not. But, we use `ifelse` to actually apply "weekend" or "weekday" to it (`weekday.or.weekend`). Then we simply add this as a column to the dataset. Finally, transform to create the factor.
 
-```{r}
+
+```r
 COMPLETE.ACTIVITY.DT$date <- as.Date(ACTIVITY.DT$date, "%Y-%m-%d") # Convert to Date type
 weekday.or.weekend <- ifelse(weekdays(COMPLETE.ACTIVITY.DT$date) %in% 
                          c("Saturday", "Sunday"), "weekend", "weekday")
@@ -211,7 +287,8 @@ We accomplish this by first recalculating the mean steps by interval, but this t
 
 We can then simply use `ggplot` to plit it, using a `facit_grid` on the `day.of.week` col.
 
-```{r plot-mean_interval_by_dayofweek}
+
+```r
 # Create data set for spltting using 2 key variables - interval and day.of.week
 complete.mean.steps.by.interval <- COMPLETE.ACTIVITY.DT[, 
                                     list(AverageSteps=mean(steps, na.rm = TRUE)), 
@@ -228,5 +305,7 @@ gg <- ggplot(data = complete.mean.steps.by.interval, aes(x = interval, y = Avera
 # Plot it!
 gg
 ```
+
+![](PA1_template_files/figure-html/plot-mean_interval_by_dayofweek-1.png)<!-- -->
 
 And there we have it!
