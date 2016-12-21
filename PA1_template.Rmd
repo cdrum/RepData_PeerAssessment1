@@ -6,6 +6,11 @@ output:
     toc: true
 ---
 
+```{r setoptions}
+library(knitr)
+opts_chunk$set(fig.path='figure/') # Store the figures in the figures/ folder
+```
+
 ## Introduction
 Author: Chris Drumgoole / https://github.com/cdrum/RepData_PeerAssessment1 / December 2016
 

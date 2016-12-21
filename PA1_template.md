@@ -1,5 +1,18 @@
 # Reproducible Research: Peer Assessment 1
 
+
+```r
+library(knitr)
+```
+
+```
+## Warning: package 'knitr' was built under R version 3.3.2
+```
+
+```r
+opts_chunk$set(fig.path='figure/') # Store the figures in the figures/ folder
+```
+
 ## Introduction
 Author: Chris Drumgoole / https://github.com/cdrum/RepData_PeerAssessment1 / December 2016
 
@@ -73,7 +86,7 @@ qplot(steps.by.day$TotalSteps, geom="histogram", binwidth=500, xlab = "Total Ste
       ylab= "Frequency with binwidth of 500")
 ```
 
-![](PA1_template_files/figure-html/stepsbydayhistogram-1.png)<!-- -->
+![](figure/stepsbydayhistogram-1.png)<!-- -->
 
 ### Mean and Median Steps per Day
 
@@ -139,7 +152,7 @@ qplot(mean.steps.by.interval$interval, mean.steps.by.interval$AverageSteps, geom
       xlab = "Interval (every 5 minutes)", ylab = "Average Steps")
 ```
 
-![](PA1_template_files/figure-html/plot-mean_interval-1.png)<!-- -->
+![](figure/plot-mean_interval-1.png)<!-- -->
 
 Next, to answer the question *"Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?"*, we can simply use the `which.max` function to find the row number and then apply it to the data.table to find the interval.
 
@@ -227,7 +240,7 @@ qplot(complete.steps.by.day$TotalSteps, geom="histogram", binwidth=500, xlab = "
       ylab= "Frequency with binwidth of 500")
 ```
 
-![](PA1_template_files/figure-html/re-analysis-1.png)<!-- -->
+![](figure/re-analysis-1.png)<!-- -->
 
 ```r
 complete.final.daily.mean <- round(mean(complete.steps.by.day$TotalSteps, na.rm=TRUE), digits=2)
@@ -306,6 +319,6 @@ gg <- ggplot(data = complete.mean.steps.by.interval, aes(x = interval, y = Avera
 gg
 ```
 
-![](PA1_template_files/figure-html/plot-mean_interval_by_dayofweek-1.png)<!-- -->
+![](figure/plot-mean_interval_by_dayofweek-1.png)<!-- -->
 
 And there we have it!
